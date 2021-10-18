@@ -1,0 +1,35 @@
+#target js
+
+import google::docs::{Table, Text}
+import google::search::search-image
+
+import std::File
+import json::Json
+import core::lang::{compile}
+import core::interop::{get-func}
+
+to load-map path
+  (path & add ".json") & File::load & Json::read
+
+words = "words.txt" & File::load & split
+defs = load-map "defs"
+sym = load-map "sym"
+ant = load-map "ant"
+sent-gen = "sentence-gen.tang" & File::load & compile & get-func "main"
+
+
+table = Table::default & .size (10,10)
+
+for i, word in (word & iter & enum)
+  where word (words & get i)
+    column = (
+      word, 
+      (defs & get word), 
+      (sent-gen & run word), 
+      (sym & get word),
+      (ant & get word),
+      (search-image word)
+    )
+    
+  for column-number in (range 0,10)
+    table &= set column-number,i (column & get i)
